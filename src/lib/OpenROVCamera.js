@@ -17,6 +17,9 @@ var OpenROVCamera = function (options) {
   var default_opts = {
       device: CONFIG.video_device,
       resolution: CONFIG.video_resolution, 
+      resolution_x: CONFIG.video_resolution_x, 
+      resolution_y: CONFIG.video_resolution_y, 
+	  rotation: CONFIG.video_rotation, 
       framerate: CONFIG.video_frame_rate,
       port: CONFIG.video_port
     };
@@ -27,9 +30,9 @@ var OpenROVCamera = function (options) {
   };
   var args = [
       '-i',
-      '/usr/local/lib/input_uvc.so -r ' + options.resolution + ' -f ' + options.framerate,
+      '/usr/local/lib/input_raspicam.so -x ' + options.resolution_x + ' -y ' + options.resolution_y + ' -fps ' + options.framerate + ' -rot ' + options.rotation,
       '-o',
-      '/usr/local/lib/output_http.so -p ' + options.port
+      '/usr/local/lib/output_http.so -w /usr/local/www -p ' + options.port
     ];
   // End camera process gracefully
   camera.close = function () {
@@ -52,7 +55,7 @@ var OpenROVCamera = function (options) {
   var capture;
   capture = function (callback) {
     logger.log('initiating camera on', options.device);
-    logger.log('ensure beagle is at 100% cpu for this camera');
+    logger.log('ensure cpu is at 100% for this camera');
     spawn('cpufreq-set', [
       '-g',
       'performance'
@@ -68,6 +71,7 @@ var OpenROVCamera = function (options) {
       // then remember that we're capturing
       logger.log('spawning capture process...');
       capture_process = spawn(cmd, args);
+	logger.log('ARGS: ' + args)
       camera.emit('started');
       capture_process.stdout.on('data', function (data) {
         logger.log('camera: ' + data);

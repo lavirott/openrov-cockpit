@@ -1,0 +1,29 @@
+{
+  "plugins": {
+    "plugin-finder": {},
+    "plugin-manager": {},
+    "software-update": {
+      "showAlerts": {
+        "showAlerts": true
+      }
+    },
+    "capestatus": {
+      "batteries": [
+        {
+          "name": "TrustFire",
+          "minVoltage": 8,
+          "maxVoltage": 13
+        },
+        {
+          "name": "LiFePO4",
+          "minVoltage": 7,
+          "maxVoltage": 10
+        }
+      ],
+      "selectedBattery": "LiFePO4"
+    },
+    "ui-selector": {
+      "selectedUi": "new-ui"
+    }
+  }
+}

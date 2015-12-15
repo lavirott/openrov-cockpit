@@ -22,6 +22,7 @@
     "mkdirp": "",
     "moment": "",
     "nconf": "",
+	"nodeimu": ">= 2.1.5",
     "optimist": "",
     "os-utils": "",
     "request": "",
