@@ -70,6 +70,9 @@ function savePreferences() {
 
 var getLibPath = function (lib) {
   var result = lib;
+  if ((nconf.get('USE_RASPBERRY') === 'true')  && (lib ==='./lib/Hardware')) {
+    result += '-raspberry';
+  }
   if (nconf.get('USE_MOCK') === 'true') {
     result += '-mock';
   }

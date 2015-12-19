@@ -18,6 +18,21 @@ Getting started
 Get a working environment
 =========================
 
+*On a raspberry pi:*
+Download from github
+`git clone https://github.com/lavirott/openrov-cockpit.git -b raspberry_rov`
+Install
+```
+cd openrov-cockpit/src
+PATH=$PATH:.
+npm install
+```
+Start with the raspberry hardware abstraction.
+```
+USE_RASPBERRY=true node app.js 
+```
+
+
 *On a beaglebone:*
 **If you just getting started and want to have working environment for the OpenROV Cockpit, we recommend that you start with using our lastest stable release as reference from the readme in [openrov-software](https://github.com/OpenROV/openrov-software)**
 

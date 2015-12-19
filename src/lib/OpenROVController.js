@@ -76,8 +76,8 @@ var OpenROVController = function (eventLoop, client) {
       controller.requestCapabilities();
     }
   });
-//  setup_serial();
-//  this.hardware.connect();
+  setup_serial();
+  this.hardware.connect();
   controller.ArduinoFirmwareVersion = 0;
   controller.Capabilities = 0;
 
@@ -107,12 +107,12 @@ var OpenROVController = function (eventLoop, client) {
 
   //Every few seconds we check to see if capabilities or settings changes on the arduino.
   //This handles the cases where we have garbled communication or a firmware update of the arduino.
-//  setInterval(function () {
-//    if (controller.notSafeToControl() === false) return;
-//      controller.updateSetting();
-//      controller.requestSettings();
-//      controller.requestCapabilities();
-//  }, 1000);
+ setInterval(function () {
+   if (controller.notSafeToControl() === false) return;
+     controller.updateSetting();
+     controller.requestSettings();
+     controller.requestCapabilities();
+ }, 1000);
 
   return controller;
 };
@@ -126,9 +126,9 @@ OpenROVController.prototype.notSafeToControl = function () {
   if (this.Capabilities !== 0)
     return false;
   //This feature added after the swap to ms on the Arduino
-//  console.log('Waiting for the capability response from Arduino before sending command.');
-//  console.log('Arduno Version: ' + this.ArduinoFirmwareVersion);
-//  console.log('Capability bitmap: ' + this.Capabilities);
+ console.log('Waiting for the capability response from Arduino before sending command.');
+ console.log('Arduno Version: ' + this.ArduinoFirmwareVersion);
+ console.log('Capability bitmap: ' + this.Capabilities);
   return true;
 };
 
