@@ -25,5 +25,8 @@
     "ui-selector": {
       "selectedUi": "new-ui"
     }
-  }
+  },
+  "googletalk_rovid": "",
+  "googletalk_rovpassword": "",
+  "googletalk_rov_pilotid": ""
 }
