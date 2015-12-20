@@ -71,7 +71,6 @@ var OpenROVCamera = function (options) {
       // then remember that we're capturing
       logger.log('spawning capture process...');
       capture_process = spawn(cmd, args);
-	logger.log('ARGS: ' + args)
       camera.emit('started');
       capture_process.stdout.on('data', function (data) {
         logger.log('camera: ' + data);

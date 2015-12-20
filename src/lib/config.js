@@ -16,7 +16,7 @@ var argv = require('optimist').argv;
 
 // Will essentially rewrite the file when a change to the defaults are made if there is a parsing error.
 try {
-  nconf.use('file', { file: './etc/rovconfig.json' });
+  nconf.use('file', { file: '/opt/openrov/cockpit/src/etc/rovconfig.json' }); // Must specify absolute path for starting with service method
 } catch (err) {
   console.log('Unable to load the configuration file, resetting to defaults');
   console.log(err);
@@ -55,6 +55,7 @@ nconf.defaults({
   'serial_baud': 115200,
   'dashboardURL': '',
   'USE_MOCK' : false,
+  'USE_RASPBERRY': 'true', // This variable must be string to comply the next test. Should be the same for USE_MOCK else can set it in this file
   'video_url' : '/cockpit/camera1'
 });
 
@@ -70,7 +71,7 @@ function savePreferences() {
 
 var getLibPath = function (lib) {
   var result = lib;
-  if ((nconf.get('USE_RASPBERRY') === 'true')  && (lib ==='./lib/Hardware')) {
+  if ((nconf.get('USE_RASPBERRY') === 'true')  && (lib === './lib/Hardware')) {
     result += '-raspberry';
   }
   if (nconf.get('USE_MOCK') === 'true') {
@@ -78,7 +79,6 @@ var getLibPath = function (lib) {
   }
   return result;
 };
-
 
 module.exports = {
   debug: nconf.get('debug'),
