@@ -1,9 +1,10 @@
-var EventEmitter = require('events').EventEmitter, StatusReader = require('./StatusReader'), CONFIG = require('./config'), vcgencmd = require('vcgencmd');
+var EventEmitter = require('events').EventEmitter, StatusReader = require('./StatusReader'), CONFIG = require('./config'), vcgencmd = require('vcgencmd'), fs = require('fs'), Tty = require('tty');
 function Hardware() {
   var DISABLED = 'DISABLED';
   var hardware = new EventEmitter();
   var reader = new StatusReader();
   var emitRawSerial = false;
+  var servoBlaster = new Tty.WriteStream(fs.openSync('/dev/servoblaster', 'w') );
   hardware.depthHoldEnabled = false;
   hardware.targetHoldEnabled = false;
   hardware.laserEnabled = false;
@@ -19,7 +20,7 @@ function Hardware() {
   };
 
   hardware.write = function (command) {
-    console.log('HARDWARE-MOCK:' + command);
+    console.log('HARDWARE-RASP:' + command);
     var commandParts = command.split(/\(|\)/);
     var commandText = commandParts[0];
     if (commandText === 'rcap') {
@@ -27,11 +28,11 @@ function Hardware() {
     }
     if (commandText === 'ligt') {
       hardware.emitStatus('LIGP:' + commandParts[1] / 255);
-      console.log('HARDWARE-MOCK return light status');
+      console.log('HARDWARE-RASP return light status');
     }
     if (commandText === 'tilt') {
       hardware.emitStatus('servo:' + commandParts[1]);
-      console.log('HARDWARE-MOCK return servo status');
+      console.log('HARDWARE-RASP return servo status');
     }
     if (commandText === 'claser') {
         if (hardware.laserEnabled) {
@@ -43,6 +44,13 @@ function Hardware() {
           hardware.emitStatus('claser:255');
         }
     }
+	if (commandText === 'go') {
+		hardware.emitStatus('go');
+		var motorSpeed = commandParts[1].split(',');
+		for (var i = 0; i < 3; i++) {
+			servoBlaster.write(i + "=" + motorSpeed[i] + "\n\r");
+		}
+	}
 
     // Depth hold
     if (commandText === 'holdDepth_toggle') {
@@ -50,12 +58,12 @@ function Hardware() {
         if (!hardware.depthHoldEnabled) {
             targetDepth = currentDepth;
             hardware.depthHoldEnabled = true;
-            console.log('HARDWARE-MOCK depth hold enabled');
+            console.log('HARDWARE-RASP depth hold enabled');
         }
         else {
             targetDepth = -500;
             hardware.depthHoldEnabled = false;
-            console.log('HARDWARE-MOCK depth hold DISABLED');
+            console.log('HARDWARE-RASP depth hold DISABLED');
         }
         hardware.emitStatus(
           'targetDepth:' +
@@ -69,12 +77,12 @@ function Hardware() {
         if (!hardware.targetHoldEnabled) {
             targetHeading = currentHeading;
             hardware.targetHoldEnabled= true;
-            console.log('HARDWARE-MOCK heading hold enabled');
+            console.log('HARDWARE-RASP heading hold enabled');
         }
         else {
             targetHeading = -500;
             hardware.targetHoldEnabled = false;
-            console.log('HARDWARE-MOCK heading hold DISABLED');
+            console.log('HARDWARE-RASP heading hold DISABLED');
         }
         hardware.emitStatus(
           'targetHeading:' + (hardware.targetHoldEnabled ? targetHeading.toString() : DISABLED)

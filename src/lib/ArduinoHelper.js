@@ -10,12 +10,12 @@ var ArduinoHelper = function () {
   //Perhaps we will shift the range to -500..0..500 in the future.
   physics.mapRawMotor = function (val) {
     val = limit(val, -1, 1);
-    val = mapA(val, -1, 1, 1000, 2000);
+    val = mapA(val, -1, 1, 75, 225);
     val = Math.round(val);
     return val;
   };
   physics.unmapMotor = function (val) {
-    val = mapA(val, 1000, 2000, -1, 1);
+    val = mapA(val, 75, 225, -1, 1);
   };
   physics.mapMotors = function (throttle, yaw, vertical) {
     var port = 0, starbord = 0;
