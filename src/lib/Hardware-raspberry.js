@@ -116,20 +116,20 @@ function Hardware() {
   }, 1000);
   setInterval(sendEvent, 3000);
   function sendEvent() {
-    var data = 'vout:9.9;iout:0.2;BT.1.I:0.3;BT.2.I:0.5;BNO055.enabled:true;BNO055.test1.pid:passed;BNO055.test2.zzz:passed;atmp:' + vcgencmd.measureTemp();
+    //var data = 'vout:9.9;iout:0.2;BT.1.I:0.3;BT.2.I:0.5;BNO055.enabled:true;BNO055.test1.pid:passed;BNO055.test2.zzz:passed;BRDT:' + vcgencmd.measureTemp();
+	var data = 'vout:10.0;iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0;BRDT:' + vcgencmd.measureTemp();
     var status = reader.parseStatus(data);
     hardware.emit('status', status);
   }
 
-  var currentDepth = 0;
-  var interval = setInterval(function() {
-    currentDepth += 0.5;
-    hardware.emit('status', reader.parseStatus('deap:' + currentDepth));
-    if (currentDepth > 50) {
-      currentDepth = 0;
-    }
-
-  }, 2000);
+//  var currentDepth = 0;
+//  var interval = setInterval(function() {
+//    currentDepth += 0.5;
+//    hardware.emit('status', reader.parseStatus('deep:' + currentDepth));
+//    if (currentDepth > 50) {
+//      currentDepth = 0;
+//    }
+//  }, 2000);
 
 
 

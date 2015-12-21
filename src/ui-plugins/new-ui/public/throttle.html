@@ -263,9 +263,9 @@
       },
       domReady: function() {
         var self = this;
-        self.setVertical(1500);
-        self.setPort(1500);
-        self.setStarboard(1500);
+        self.setVertical(150);
+        self.setPort(150);
+        self.setStarboard(150);
       },
       setPowerLevel: function(level) {
         this.power = level;
@@ -297,7 +297,7 @@
         var y;
         // the min throttle height is 200, therefore we substract 100 px
         var maxheight = 815; 
-        var height = value.map(1000, 2000, 0 - maxheight, maxheight);
+        var height = value.map(75, 225, 0 - maxheight, maxheight);
         console.log('level height: ' + this.height/2 + ' height: ' + height);
         y = (815/2) - height;
         if (height < 0) {
