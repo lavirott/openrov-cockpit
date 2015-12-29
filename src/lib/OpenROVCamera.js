@@ -7,9 +7,10 @@
  * and then emits the content to the Node.js server in base64 (string) format.
  *
  */
-var spawn = require('child_process').spawn, util = require('util'), request = require('request'), EventEmitter = require('events').EventEmitter, fs = require('fs'), path = require('path'), CONFIG = require('./config'), logger = require('./logger').create(CONFIG), orutils = require('./orutils'), moment = require('moment');   
+var spawn = require('child_process').spawn, util = require('util'), request = require('request'), EventEmitter = require('events').EventEmitter, fs = require('fs'), path = require('path'), CONFIG = require('./config'), logger = require('./logger').create(CONFIG), orutils = require('./orutils'), moment = require('moment'), Gpio = require('onoff').Gpio;
 var OpenROVCamera = function (options) {
   var camera = new EventEmitter();
+  var cameraLed = new Gpio(32, 'low');
   var capture_process;
   // Open mjpg_streamer app as a child process
   var cmd = 'mjpg_streamer';
@@ -25,8 +26,20 @@ var OpenROVCamera = function (options) {
     };
   options = orutils.mixin(options, default_opts);
   var _capturing = false;
+  Object.defineProperty(camera, 'capturing', {
+    get: function() {
+        return _capturing;
+    },
+    set: function(value) {
+        _capturing = value;
+        if (value == true)
+            cameraLed.writeSync(1);
+        else
+            cameraLed.writeSync(0);
+    }
+  });
   camera.IsCapturing = function () {
-    return _capturing;
+    return camera.capturing;
   };
   var args = [
       '-i',
@@ -36,15 +49,15 @@ var OpenROVCamera = function (options) {
     ];
   // End camera process gracefully
   camera.close = function () {
-    if (!_capturing)
+    if (!camera.capturing)
       return;
     logger.log('closing camera on', options.device);
-    _capturing = false;
+    camera.capturing = false;
     logger.log('sending SIGHUP to capture process');
     process.kill(capture_process.pid, 'SIGHUP');
   };
   camera.snapshot = function (callback) {
-    if (!_capturing)
+    if (!camera.capturing)
       return;
     var filename = CONFIG.preferences.get('photoDirectory') + '/ROV' + moment().format('YYYYMMDDHHmmss') + '.jpg';
     request('http://localhost:' + options.port + '/?action=snapshot').pipe(fs.createWriteStream(filename));
@@ -67,7 +80,7 @@ var OpenROVCamera = function (options) {
         return callback(new Error(options.device + ' does not exist'));
       // wooooo!  camera!
       logger.log(options.device, ' found');
-      _capturing = true;
+      camera.capturing = true;
       // then remember that we're capturing
       logger.log('spawning capture process...');
       capture_process = spawn(cmd, args);
@@ -81,7 +94,7 @@ var OpenROVCamera = function (options) {
       console.log('camera started');
       capture_process.on('exit', function (code) {
         console.log('child process exited with code ' + code);
-        _capturing = false;
+        camera.capturing = false;
         camera.emit('error.device', code);
         if ( restartCount < 10 ) {
           console.log('starting new camera process for the ' + restartCount + ' time');

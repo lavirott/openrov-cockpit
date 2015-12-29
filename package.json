@@ -23,6 +23,7 @@
     "moment": "",
     "nconf": "",
 	"nodeimu": ">= 2.1.5",
+	"onoff": ">= 1.0.3",
     "optimist": "",
     "os-utils": "",
     "request": "",
