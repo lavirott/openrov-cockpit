@@ -31,7 +31,6 @@
     "socket.io": "~1.1.0",
     "sync": "",
     "systemd": "git://github.com/plietar/node-systemd",    
-    "vcgencmd": ">= 0.3.0",
 	"crc" : ""
   },
   "bundleDependencies": [
