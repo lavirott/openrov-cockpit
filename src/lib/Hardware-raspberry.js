@@ -9,11 +9,46 @@ function Hardware() {
   hardware.targetHoldEnabled = false;
   hardware.laserEnabled = false;
 
+  //### Initializing the GrovePi Board and connect callback for data reading ###//
+  var _voltageValue = 0;
+
+  var GrovePi = require('node-grovepi').GrovePi
+  var Commands = GrovePi.commands
+  var Board = GrovePi.board
+  var AnalogSensor = GrovePi.sensors.base.Analog
+
+  var KalmanFilter = require('kalmanjs').default;
+  var kf = new KalmanFilter({R: 0.01, Q: 3});
+
+  var board = new Board({
+    debug: true,
+    onError: function(err) {
+      console.log('GrovePi board initialization error:')
+      console.log(err)
+    },
+    onInit: function(res) {
+      if (res) {
+      console.log('GrovePi Version: ' + board.version())
+
+      var phidgetVoltageSensor = new AnalogSensor(0)
+      console.log('Analog Sensor (start reading)')
+      phidgetVoltageSensor.stream(250, function(value) {
+        if (value != false) {
+          _voltageValue = Math.round(kf.filter((value - 554) / 11.5384) * 10) / 10;
+          //console.log('Value: ' + value + ' Voltage Value: ' + _voltageValue);
+        }
+      })
+      }
+    }
+  })
+  //##########//
+
   reader.on('Arduino-settings-reported', function (settings) {
     hardware.emit('Arduino-settings-reported', settings);
   });
   hardware.connect = function () {
-    console.log('!Serial port opened');
+//    console.log('!Serial port opened');
+    board.init();
   };
   hardware.toggleRawSerialData = function toggleRawSerialData() {
     emitRawSerial = !emitRawSerial;
@@ -44,13 +79,13 @@ function Hardware() {
           hardware.emitStatus('claser:255');
         }
     }
-	if (commandText === 'go') {
-		hardware.emitStatus('go');
-		var motorSpeed = commandParts[1].split(',');
-		for (var i = 0; i < 3; i++) {
-			servoBlaster.write(i + "=" + motorSpeed[i] + "\n\r");
-		}
-	}
+    if (commandText === 'go') {
+      hardware.emitStatus('go');
+      var motorSpeed = commandParts[1].split(',');
+      for (var i = 0; i < 3; i++) {
+        servoBlaster.write(i + "=" + motorSpeed[i] + "\n\r");
+      }
+    }
 
     // Depth hold
     if (commandText === 'holdDepth_toggle') {
@@ -107,17 +142,18 @@ function Hardware() {
 
   };
   hardware.close = function () {
-    console.log('!Serial port closed');
+//    console.log('!Serial port closed');
+    console.log('GrovePi board closed');
   };
   var time = 1000;
   setInterval(function () {
     hardware.emit('status', reader.parseStatus('time:' + time));
     time += 1000;
   }, 1000);
-  setInterval(sendEvent, 3000);
+  setInterval(sendEvent, 2000);
   function sendEvent() {
     //var data = 'vout:9.9;iout:0.2;BT.1.I:0.3;BT.2.I:0.5;BNO055.enabled:true;BNO055.test1.pid:passed;BNO055.test2.zzz:passed;';
-	var data = 'vout:10.0;iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0';
+    var data = 'vout:' + _voltageValue + ';iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0';
     var status = reader.parseStatus(data);
     hardware.emit('status', status);
   }

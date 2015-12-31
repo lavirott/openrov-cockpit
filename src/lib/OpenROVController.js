@@ -6,12 +6,12 @@
  */
 var path = require('path'), spawn = require('child_process').spawn, CONFIG = require('./config'), StatusReader = require('./StatusReader'), ArduinoHelper = require('./ArduinoHelper'), logger = require('./logger').create(CONFIG), EventEmitter = require('events').EventEmitter, Hardware = require('../' + CONFIG.Hardware);
 var setup_serial = function () {
-  var location = path.join(__dirname, '..', './linux');
-  logger.log('Starting the script from ' + location + ' to setup UART1...');
-  var setuart_process = spawn('sudo', [path.join(location, 'setuart.sh')]);
-  setuart_process.on('error', function (err) {
-    logger.log('Error while starting the UART1 setup scipt!\nThe error was: ' + err);
-  });
+  // var location = path.join(__dirname, '..', './linux');
+  // logger.log('Starting the script from ' + location + ' to setup UART1...');
+  // var setuart_process = spawn('sudo', [path.join(location, 'setuart.sh')]);
+  // setuart_process.on('error', function (err) {
+    // logger.log('Error while starting the UART1 setup scipt!\nThe error was: ' + err);
+  // });
 };
 var statusdata = {};
 var settingsCollection = {
