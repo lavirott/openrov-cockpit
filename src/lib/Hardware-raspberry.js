@@ -1,4 +1,4 @@
-var EventEmitter = require('events').EventEmitter, StatusReader = require('./StatusReader'), CONFIG = require('./config'), fs = require('fs'), Tty = require('tty');
+var EventEmitter = require('events').EventEmitter, StatusReader = require('./StatusReader'), CONFIG = require('./config'), fs = require('fs'), Tty = require('tty'), logger = require('./logger').create(CONFIG);
 function Hardware() {
   var DISABLED = 'DISABLED';
   var hardware = new EventEmitter();
@@ -11,6 +11,7 @@ function Hardware() {
 
   //### Initializing the GrovePi Board and connect callback for data reading ###//
   var _voltageValue = 0;
+  var _temperatureValue = 0;
 
   var GrovePi = require('node-grovepi').GrovePi
   var Commands = GrovePi.commands
@@ -18,29 +19,42 @@ function Hardware() {
   var AnalogSensor = GrovePi.sensors.base.Analog
 
   var KalmanFilter = require('kalmanjs').default;
-  var kf = new KalmanFilter({R: 0.01, Q: 3});
+  var kfVolt = new KalmanFilter({R: 0.01, Q: 3});
+  var kfTemp = new KalmanFilter({R: 0.01, Q: 3});
 
   var board = new Board({
     debug: true,
     onError: function(err) {
-      console.log('GrovePi board initialization error:')
-      console.log(err)
+      logger.log('GrovePi board initialization error:')
+      logger.log(err)
     },
     onInit: function(res) {
       if (res) {
-      console.log('GrovePi Version: ' + board.version())
+      logger.log('GrovePi Version: ' + board.version())
 
       var phidgetVoltageSensor = new AnalogSensor(0)
-      console.log('Analog Sensor (start reading)')
+      logger.log('Analog Sensor (start reading)')
       phidgetVoltageSensor.stream(250, function(value) {
         if (value != false) {
-          _voltageValue = Math.round(kf.filter((value - 554) / 11.5384) * 10) / 10;
+          _voltageValue = Math.round(kfVolt.filter((value - 554) / 11.5384) * 10) / 10;
           //console.log('Value: ' + value + ' Voltage Value: ' + _voltageValue);
         }
       })
       }
     }
   })
+  
+  var kfTemp = new KalmanFilter({R: 0.01, Q: 3});
+  var readTemperature = function() {
+    fs.readFile('/sys/devices/virtual/thermal/thermal_zone0/temp', function (err, data) {
+      if (err != null) {
+        logger.log('Error accessing sysfs temperature data: ' + err);
+      } else {
+	    _temperatureValue = Math.round(kfTemp.filter(parseInt(data.toString()) / 100)) / 10;
+        //console.log('Temperature=' + _temperatureValue);
+      }
+    });
+  }
   //##########//
 
   reader.on('Arduino-settings-reported', function (settings) {
@@ -49,6 +63,7 @@ function Hardware() {
   hardware.connect = function () {
 //    console.log('!Serial port opened');
     board.init();
+	setInterval(readTemperature, 1000);
   };
   hardware.toggleRawSerialData = function toggleRawSerialData() {
     emitRawSerial = !emitRawSerial;
@@ -143,7 +158,7 @@ function Hardware() {
   };
   hardware.close = function () {
 //    console.log('!Serial port closed');
-    console.log('GrovePi board closed');
+    logger.log('GrovePi board closed');
   };
   var time = 1000;
   setInterval(function () {
@@ -153,7 +168,7 @@ function Hardware() {
   setInterval(sendEvent, 2000);
   function sendEvent() {
     //var data = 'vout:9.9;iout:0.2;BT.1.I:0.3;BT.2.I:0.5;BNO055.enabled:true;BNO055.test1.pid:passed;BNO055.test2.zzz:passed;';
-    var data = 'vout:' + _voltageValue + ';iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0';
+    var data = 'brdt:' + _temperatureValue + ';vout:' + _voltageValue + ';iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0';
     var status = reader.parseStatus(data);
     hardware.emit('status', status);
   }
