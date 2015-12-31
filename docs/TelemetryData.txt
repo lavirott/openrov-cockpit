@@ -1,0 +1,34 @@
+hdgd: heading in °
+deep: depth
+pitc: pitch of ROV
+roll: roll of ROV
+yaw : yaw of ROV
+fthr: work pourcentage of the power send
+brdt: board temperature in °C
+SC1I: current of motor ?
+SC2I:
+SC3I:
+BRDI: current of board
+BT1I: current of battery 1
+BT2I: current of battery 2
+BRDV: board voltage (board = openrov board ?)
+AVCC: voltage of the Arduino
+motors: read value for all 3 motors
+mtarg: target value for all 3 motors
+motorAttached: 1=true, 0=false
+servo: value of the servo
+starg: target for the servo
+fmem: free amoung of memory on the Arduino
+vout: voltage seen on the cockpit board
+iout: current seen on the cockpit board
+atmp: Arduino temperature ?
+version: hash of the arduino code
+cmpd: date of the produced Arduino image
+cpuUsage: cpu usage of the beaglebone
+time: runtime the software as been running
+pres: pressure information
+temp: IMU water temperature
+dlms: device loop milliseconds meseaured on the Arduino
+alps: Arduino loops per second
+cmd: last command traited by Arduino
+CAPA: capabilities of the openrov cape with is a bit array
