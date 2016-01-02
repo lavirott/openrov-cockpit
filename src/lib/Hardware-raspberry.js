@@ -1,4 +1,5 @@
-var EventEmitter = require('events').EventEmitter, StatusReader = require('./StatusReader'), CONFIG = require('./config'), fs = require('fs'), Tty = require('tty'), logger = require('./logger').create(CONFIG);
+var EventEmitter = require('events').EventEmitter, StatusReader = require('./StatusReader'), CONFIG = require('./config'), fs = require('fs'), Tty = require('tty'), logger = require('./logger').create(CONFIG), util = require('util'), nodeimu  = require('nodeimu');
+;
 function Hardware() {
   var DISABLED = 'DISABLED';
   var hardware = new EventEmitter();
@@ -44,16 +45,65 @@ function Hardware() {
     }
   })
   
+  //### Read temperature data from sysfs ###//
   var kfTemp = new KalmanFilter({R: 0.01, Q: 3});
   var readTemperature = function() {
     fs.readFile('/sys/devices/virtual/thermal/thermal_zone0/temp', function (err, data) {
       if (err != null) {
         logger.log('Error accessing sysfs temperature data: ' + err);
       } else {
-	    _temperatureValue = Math.round(kfTemp.filter(parseInt(data.toString()) / 100)) / 10;
+        _temperatureValue = Math.round(kfTemp.filter(parseInt(data.toString()) / 100)) / 10;
         //console.log('Temperature=' + _temperatureValue);
       }
     });
+  }
+
+  //### Read and send data from IMU ###//
+  var navdata = {
+    roll: 0,
+    pitch: 0,
+    yaw: 0,
+    thrust: 0,
+    depth: 0,
+    heading: 0
+  };
+
+  var RTMATH_PI =  3.1415926535;
+  var RTMATH_RAD_TO_DEGREE = (180.0 / RTMATH_PI);
+
+  var IMU = new nodeimu.IMU();
+
+  var num = 0;
+  var numStop = 10000000000;
+
+  console.time("async");
+  var tic = new Date();
+
+  var callback = function (e, data) {
+    var toc = new Date();
+
+    if (e) {
+      logger.log(e);
+      return;
+    }
+
+    if ((data.fusionPose.x != 0) && (data.fusionPose.y != 0) && (data.fusionPose.z != 0)) {
+      navdata.roll = - data.fusionPose.y * RTMATH_RAD_TO_DEGREE;
+      navdata.pitch = data.fusionPose.x * RTMATH_RAD_TO_DEGREE;
+      navdata.yaw = data.fusionPose.z * RTMATH_RAD_TO_DEGREE;
+      navdata.heading = data.tiltHeading  * RTMATH_RAD_TO_DEGREE + 90;
+
+	  emitData = 'hdgd:' + navdata.heading + ';roll:' + navdata.roll + ';pitc:' + navdata.pitch + ';yaw:' + navdata.yaw + ';'
+      hardware.emit('status', reader.parseStatus(emitData));
+      //console.log(emitData);
+    }
+
+    num++;
+    if (num == numStop) {
+      console.timeEnd("async");
+    } else {
+      setTimeout(function() { tic = new Date(); IMU.getValue(callback); } , 15 - (toc - tic));
+    }
   }
   //##########//
 
@@ -63,7 +113,8 @@ function Hardware() {
   hardware.connect = function () {
 //    console.log('!Serial port opened');
     board.init();
-	setInterval(readTemperature, 1000);
+    IMU.getValue(callback);
+    setInterval(readTemperature, 1000);
   };
   hardware.toggleRawSerialData = function toggleRawSerialData() {
     emitRawSerial = !emitRawSerial;
@@ -152,7 +203,7 @@ function Hardware() {
     var txtStatus = reader.parseStatus(status);
     hardware.emit('status', txtStatus);
     if (emitRawSerial) {
-      hardware.emit('serial-recieved', status);
+      hardware.emit('serial-received', status);
     }
 
   };
@@ -169,8 +220,7 @@ function Hardware() {
   function sendEvent() {
     //var data = 'vout:9.9;iout:0.2;BT.1.I:0.3;BT.2.I:0.5;BNO055.enabled:true;BNO055.test1.pid:passed;BNO055.test2.zzz:passed;';
     var data = 'brdt:' + _temperatureValue + ';vout:' + _voltageValue + ';iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0';
-    var status = reader.parseStatus(data);
-    hardware.emit('status', status);
+    hardware.emit('status', reader.parseStatus(data));
   }
 
 //  var currentDepth = 0;
@@ -181,8 +231,6 @@ function Hardware() {
 //      currentDepth = 0;
 //    }
 //  }, 2000);
-
-
 
   return hardware;
 }
