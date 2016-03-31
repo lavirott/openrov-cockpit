@@ -20,9 +20,8 @@ function Hardware() {
   var AnalogSensor = GrovePi.sensors.base.Analog
 
   var KalmanFilter = require('kalmanjs').default;
-  var kfVolt = new KalmanFilter({R: 0.01, Q: 3});
-  var kfTemp = new KalmanFilter({R: 0.01, Q: 3});
 
+  var kfVolt = new KalmanFilter({R: 0.01, Q: 3});
   var board = new Board({
     debug: true,
     onError: function(err) {
@@ -133,6 +132,7 @@ function Hardware() {
     }
     if (commandText === 'tilt') {
       hardware.emitStatus('servo:' + commandParts[1]);
+      servoBlaster.write("3="  + commandParts[1] + "\n\r");
       console.log('HARDWARE-RASP return servo status');
     }
     if (commandText === 'claser') {
@@ -151,6 +151,7 @@ function Hardware() {
       for (var i = 0; i < 3; i++) {
         servoBlaster.write(i + "=" + motorSpeed[i] + "\n\r");
       }
+      console.log('HARDWARE-RASP return servo status');
     }
 
     // Depth hold
