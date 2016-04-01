@@ -135,6 +135,11 @@ function Hardware() {
       servoBlaster.write("3="  + commandParts[1] + "\n\r");
       console.log('HARDWARE-RASP return servo status');
     }
+    if (commandText === 'pan') {
+      //hardware.emitStatus('servo:' + commandParts[1]);
+      servoBlaster.write("4="  + commandParts[1] + "\n\r");
+      console.log('HARDWARE-RASP return servo status');
+    }
     if (commandText === 'claser') {
         if (hardware.laserEnabled) {
           hardware.laserEnabled = false;

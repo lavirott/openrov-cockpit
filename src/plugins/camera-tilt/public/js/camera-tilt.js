@@ -22,6 +22,7 @@
           defaults: { keyboard: 'q', gamepad: 'B' },
           down: function () {
             cockpit.rov.emit('plugin.cameraTilt.set', 0);
+            cockpit.rov.emit('plugin.cameraPan.set', 0);            
           }
         },
         {
@@ -30,6 +31,23 @@
           defaults: { keyboard: 'w', gamepad: 'Y' },
           down: function () {
             cockpit.rov.emit('plugin.cameraTilt.adjust', 0.1);
+          }
+        },
+        // camera left/centre/right
+        {
+          name: 'plugin.cameraPan.adjust_left',
+          description: 'Point the camera further left.',
+          defaults: { keyboard: 's' },
+          down: function () {
+            cockpit.rov.emit('plugin.cameraPan.adjust', -0.1);
+          }
+        },
+        {
+          name: 'plugin.cameraPan.adjust_right',
+          description: 'Point the camera further right.',
+          defaults: { keyboard: 'd' },
+          down: function () {
+            cockpit.rov.emit('plugin.cameraPan.adjust', 0.1);
           }
         }
       ]);

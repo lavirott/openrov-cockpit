@@ -35,7 +35,7 @@ var ArduinoHelper = function () {
   physics.mapCurrentReading = function (voltage) {
     return mapA(voltage, 0, 1023, 0, 5) + 0.4;  //add offset
   };
-  physics.mapTiltServo = function (value) {
+  physics.mapServo = function (value) {
     value = limit(value, -1, 1);
     value = mapA(value, -1, 1, 75, 225);
     return Math.round(value);

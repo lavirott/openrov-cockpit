@@ -32,6 +32,9 @@
           window.cockpit.rov.on('plugin.cameraTilt.angle', function(angle) {
             self.servoAngle = angle;
           });
+          window.cockpit.rov.on('plugin.cameraPan.angle', function(angle) {
+            self.servoAngle = angle;
+          });
         }
       })
     })();

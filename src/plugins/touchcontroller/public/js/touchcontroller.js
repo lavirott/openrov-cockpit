@@ -142,6 +142,51 @@
             }
           },
           {
+            label: 'C-LEFT',
+            fontSize: 10,
+            radius: '5%',
+            stroke: 2,
+            backgroundColor: 'blue',
+            fontColor: '#fff',
+            offset: {
+              x: '-15%',
+              y: '5%'
+            },
+            touchStart: function () {
+              cockpit.rov.emit('plugin.rovpilot.adjustCameraPan', 0.1);
+            }
+          },
+          {
+            label: 'C-PCEN',
+            fontSize: 10,
+            radius: '5%',
+            stroke: 2,
+            backgroundColor: 'blue',
+            fontColor: '#fff',
+            offset: {
+              x: '-5%',
+              y: '5%'
+            },
+            touchStart: function () {
+              cockpit.rov.emit('plugin.rovpilot.setCameraPan', 0);
+            }
+          },
+          {
+            label: 'C-RIGHT',
+            fontSize: 10,
+            radius: '5%',
+            stroke: 2,
+            backgroundColor: 'blue',
+            fontColor: '#fff',
+            offset: {
+              x: '4%',
+              y: '5%'
+            },
+            touchStart: function () {
+              cockpit.rov.emit('plugin.rovpilot.adjustCameraPan', -0.1);
+            }
+          },
+          {
             label: 'laser',
             fontSize: 13,
             radius: '7%',
