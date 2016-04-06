@@ -57,6 +57,33 @@ function Hardware() {
     });
   }
 
+  //### Utilities for heading computation ###//
+  var headingCorrection = function(heading, offset) {
+  if (typeof offset ==='undefined')
+      offset = 0;
+
+  // Once you have your heading, you must then add your 'Declination Angle', which is the 'Error' of the magnetic field in your location.
+  // Find yours here: http://www.magnetic-declination.com/
+  var declinationAngle = 0.03106686;
+
+  heading += declinationAngle + offset;
+
+  // Correct for when signs are reversed.
+  if (heading < 0)
+    heading += 2 * Math.PI;
+
+  // Check for wrap due to addition of declination.
+  if (heading > 2 * Math.PI)
+    heading -= 2 * Math.PI;
+
+  return heading;
+}
+
+var headingToDegree = function(heading) {
+  // Convert radians to degrees for readability.
+  return heading * 180 / Math.PI;
+}
+
   //### Read and send data from IMU ###//
   var navdata = {
     roll: 0,
@@ -90,7 +117,7 @@ function Hardware() {
       navdata.roll = - data.fusionPose.y * RTMATH_RAD_TO_DEGREE;
       navdata.pitch = data.fusionPose.x * RTMATH_RAD_TO_DEGREE;
       navdata.yaw = data.fusionPose.z * RTMATH_RAD_TO_DEGREE;
-      navdata.heading = data.tiltHeading  * RTMATH_RAD_TO_DEGREE + 90;
+      navdata.heading = headingToDegree(headingCorrection(data.tiltHeading, Math.PI / 2));
 
 	  emitData = 'hdgd:' + navdata.heading + ';roll:' + navdata.roll + ';pitc:' + navdata.pitch + ';yaw:' + navdata.yaw + ';'
       hardware.emit('status', reader.parseStatus(emitData));
