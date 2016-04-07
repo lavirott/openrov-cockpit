@@ -10,10 +10,14 @@ function Hardware() {
   hardware.targetHoldEnabled = false;
   hardware.laserEnabled = false;
 
-  //### Initializing the GrovePi Board and connect callback for data reading ###//
+  //### Initializing global variable needed in this Hardware class
   var _voltageValue = 0;
   var _temperatureValue = 0;
+  var _deepValue = 0;
+  var _headingValue = 0;
+  var _waterType = 1; // 'SaltWater
 
+  //### Initializing the GrovePi Board and connect callback for data reading ###//
   var GrovePi = require('node-grovepi').GrovePi
   var Commands = GrovePi.commands
   var Board = GrovePi.board
@@ -118,6 +122,7 @@ var headingToDegree = function(heading) {
       navdata.pitch = data.fusionPose.x * RTMATH_RAD_TO_DEGREE;
       navdata.yaw = data.fusionPose.z * RTMATH_RAD_TO_DEGREE;
       navdata.heading = headingToDegree(headingCorrection(data.tiltHeading, Math.PI / 2));
+      _headingValue = navdata.heading;
 
 	  emitData = 'hdgd:' + navdata.heading + ';roll:' + navdata.roll + ';pitc:' + navdata.pitch + ';yaw:' + navdata.yaw + ';'
       hardware.emit('status', reader.parseStatus(emitData));
@@ -150,6 +155,7 @@ var headingToDegree = function(heading) {
     console.log('HARDWARE-RASP:' + command);
     var commandParts = command.split(/\(|\)/);
     var commandText = commandParts[0];
+
     if (commandText === 'rcap') {
       hardware.emitStatus('CAPA:255');
     }
@@ -190,37 +196,42 @@ var headingToDegree = function(heading) {
     if (commandText === 'holdDepth_toggle') {
         var targetDepth = 0;
         if (!hardware.depthHoldEnabled) {
-            targetDepth = currentDepth;
+            targetDepth = _deepValue;
             hardware.depthHoldEnabled = true;
             console.log('HARDWARE-RASP depth hold enabled');
         }
         else {
-            targetDepth = -500;
             hardware.depthHoldEnabled = false;
             console.log('HARDWARE-RASP depth hold DISABLED');
         }
-        hardware.emitStatus(
-          'targetDepth:' +
-          (hardware.depthHoldEnabled ? targetDepth.toString() : DISABLED)
-        );
+        hardware.emitStatus('targetDepth:' + (hardware.depthHoldEnabled ? targetDepth.toString() : DISABLED));
     }
 
     // Heading hold
     if (commandText === 'holdHeading_toggle') {
         var targetHeading = 0;
         if (!hardware.targetHoldEnabled) {
-            targetHeading = currentHeading;
+            targetHeading = _headingValue;
             hardware.targetHoldEnabled= true;
             console.log('HARDWARE-RASP heading hold enabled');
         }
         else {
-            targetHeading = -500;
             hardware.targetHoldEnabled = false;
             console.log('HARDWARE-RASP heading hold DISABLED');
         }
         hardware.emitStatus(
           'targetHeading:' + (hardware.targetHoldEnabled ? targetHeading.toString() : DISABLED)
         );
+    }
+
+    // Water Type
+    if (commandText === 'dtwa') {
+      if (_waterType == 0) { // if FreshWater then invert parameter value
+        _waterType = 1;
+      } else {
+        _waterType =  0;
+      }
+      // MUST use this water type to compute the right deep ! TODO
     }
 
     // example tests for passthrough
@@ -252,18 +263,9 @@ var headingToDegree = function(heading) {
   setInterval(sendEvent, 2000);
   function sendEvent() {
     //var data = 'vout:9.9;iout:0.2;BT.1.I:0.3;BT.2.I:0.5;BNO055.enabled:true;BNO055.test1.pid:passed;BNO055.test2.zzz:passed;';
-    var data = 'brdt:' + _temperatureValue + ';vout:' + _voltageValue + ';iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0';
+    var data = 'brdt:' + _temperatureValue + ';vout:' + _voltageValue + ';iout:0.0;BT.1.I:0.0;BT.2.I:0.0;deep:0;dtwa:' + _waterType;
     hardware.emit('status', reader.parseStatus(data));
   }
-
-//  var currentDepth = 0;
-//  var interval = setInterval(function() {
-//    currentDepth += 0.5;
-//    hardware.emit('status', reader.parseStatus('deep:' + currentDepth));
-//    if (currentDepth > 50) {
-//      currentDepth = 0;
-//    }
-//  }, 2000);
 
   return hardware;
 }
