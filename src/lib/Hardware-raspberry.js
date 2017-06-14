@@ -21,7 +21,10 @@ function Hardware() {
   var GrovePi = require('node-grovepi').GrovePi
   var Commands = GrovePi.commands
   var Board = GrovePi.board
-  var AnalogSensor = GrovePi.sensors.base.Analog
+  var Analog = GrovePi.sensors.base.Analog
+
+  var _ledFading = new Analog(5)
+  var _laserOnOff = new GrovePi.sensors.DigitalOutput(2)
 
   var KalmanFilter = require('kalmanjs').default;
 
@@ -34,16 +37,16 @@ function Hardware() {
     },
     onInit: function(res) {
       if (res) {
-      logger.log('GrovePi Version: ' + board.version())
+        logger.log('GrovePi Version: ' + board.version())
 
-      var phidgetVoltageSensor = new AnalogSensor(0)
-      logger.log('Analog Sensor (start reading)')
-      phidgetVoltageSensor.stream(250, function(value) {
-        if (value != false) {
-          _voltageValue = Math.round(kfVolt.filter((value - 554) / 11.5384) * 10) / 10;
-          //console.log('Value: ' + value + ' Voltage Value: ' + _voltageValue);
-        }
-      })
+        var phidgetVoltageSensor = new Analog(0)
+        logger.log('Analog Sensor 0, voltage sensor (start reading)')
+        phidgetVoltageSensor.stream(250, function(value) {
+          if (value != false) {
+            _voltageValue = Math.round(kfVolt.filter((value - 554) / 11.5384) * 10) / 10;
+            //console.log('Value: ' + value + ' Voltage Value: ' + _voltageValue);
+          }
+        })
       }
     }
   })
@@ -143,8 +146,8 @@ var headingToDegree = function(heading) {
   });
   hardware.connect = function () {
 //    console.log('!Serial port opened');
-    board.init();
     IMU.getValue(callback);
+    board.init();
     setInterval(readTemperature, 1000);
   };
   hardware.toggleRawSerialData = function toggleRawSerialData() {
@@ -161,6 +164,7 @@ var headingToDegree = function(heading) {
     }
     if (commandText === 'ligt') {
       hardware.emitStatus('LIGP:' + commandParts[1] / 255);
+	  _ledFading.write(commandParts[1]);
       console.log('HARDWARE-RASP return light status');
     }
     if (commandText === 'tilt') {
@@ -176,10 +180,12 @@ var headingToDegree = function(heading) {
     if (commandText === 'claser') {
         if (hardware.laserEnabled) {
           hardware.laserEnabled = false;
+          _laserOnOff.turnOff();
           hardware.emitStatus('claser:0');
         }
         else {
           hardware.laserEnabled = true;
+		  _laserOnOff.turnOn();
           hardware.emitStatus('claser:255');
         }
     }
